@@ -26,7 +26,7 @@ type Response struct {
 	Data interface{} ` + "`json:\"data,omitempty\"`" + `
 }
 
-func (UnimplementedGreeterHTTPServer) Err(ctx *gin.Context, err error) {
+func (Unimplemented{{.ServiceType}}HTTPServer) Err(ctx *gin.Context, err error) {
 	res := &Response{}
 	if errx, ok := err.(errorx.Errorx); ok {
 		res.Code = errx.Code()
@@ -37,7 +37,7 @@ func (UnimplementedGreeterHTTPServer) Err(ctx *gin.Context, err error) {
 	ctx.JSON(200, res)
 }
 
-func (UnimplementedGreeterHTTPServer) Data(ctx *gin.Context, data interface{}) {
+func (Unimplemented{{.ServiceType}}HTTPServer) Data(ctx *gin.Context, data interface{}) {
 	res := &Response{
 		Code: 200,
 		Message: "ok",
