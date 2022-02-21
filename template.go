@@ -71,7 +71,7 @@ func _{{$svrType}}_{{.Name}}{{.Num}}_HTTP_Handler(srv {{$svrType}}HTTPServer) fu
 			srv.Err(ctx, err)
 			return
 		}
-		ctx.JSON(200, reply)
+		srv.Data(ctx, reply)
 	}
 }
 {{end}}
