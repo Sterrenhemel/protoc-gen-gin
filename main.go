@@ -3,18 +3,32 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/go-kratos/kratos/tool/protobuf/pkg/gen"
-	"os"
+
+	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/types/pluginpb"
+)
+
+var (
+	showVersion = flag.Bool("version", false, "print the version and exit")
+	omitempty   = flag.Bool("omitempty", true, "omit if google.api is empty")
 )
 
 func main() {
-	versionFlag := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
-	if *versionFlag {
-		fmt.Println("1.0.0")
-		os.Exit(0)
+	if *showVersion {
+		fmt.Printf("protoc-gen-gin %v\n", release)
+		return
 	}
-
-	g := GinGenerator()
-	gen.Main(g)
+	protogen.Options{
+		ParamFunc: flag.CommandLine.Set,
+	}.Run(func(gen *protogen.Plugin) error {
+		gen.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
+		for _, f := range gen.Files {
+			if !f.Generate {
+				continue
+			}
+			generateFile(gen, f, *omitempty)
+		}
+		return nil
+	})
 }

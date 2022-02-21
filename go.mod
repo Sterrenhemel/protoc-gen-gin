@@ -1,13 +1,12 @@
-module github.com/312362115/protoc-gen-gin
+module github.com/Sterrenhemel/protoc-gen-gin
 
-go 1.15
+go 1.16
 
 require (
-	github.com/gin-gonic/gin v1.6.3
-	github.com/go-kratos/kratos v0.6.0
-	github.com/gogo/protobuf v1.3.1
-	github.com/golang/protobuf v1.4.3
-	github.com/pkg/errors v0.9.1 // indirect
-	google.golang.org/genproto v0.0.0-20200402124713-8ff61da6d932
-	google.golang.org/grpc v1.29.1
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-kratos/kratos/v2 v2.1.4
+	github.com/kr/pretty v0.1.0 // indirect
+	google.golang.org/genproto v0.0.0-20210805201207-89edb61ffb67
+	google.golang.org/protobuf v1.27.1
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
