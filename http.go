@@ -21,7 +21,8 @@ const (
 	ginPackage           = protogen.GoImportPath("github.com/gin-gonic/gin")
 	errorxPackage        = protogen.GoImportPath("github.com/Sterrenhemel/errorx")
 	transportHTTPPackage = protogen.GoImportPath("github.com/go-kratos/kratos/v2/transport/http")
-	bindingPackage       = protogen.GoImportPath("github.com/go-kratos/kratos/v2/transport/http/binding")
+	kBindingPackage      = protogen.GoImportPath("github.com/go-kratos/kratos/v2/transport/http/binding")
+	bindingPackage       = protogen.GoImportPath("github.com/gin-gonic/gin/binding")
 )
 
 var methodSets = make(map[string]int)
@@ -54,7 +55,8 @@ func generateFileContent(gen *protogen.Plugin, file *protogen.File, g *protogen.
 	g.P("var _ = new(", ginPackage.Ident("Context"), ")")
 	g.P("var _ = ", errorsPackage.Ident(`New("")`))
 	g.P("var _ = new(", errorxPackage.Ident("Err"), ")")
-	g.P("var _ = ", bindingPackage.Ident("EncodeURL"))
+	g.P("var _ = ", kBindingPackage.Ident("EncodeURL"))
+	g.P("var _ = ", bindingPackage.Ident("JSON"))
 	g.P("const _ = ", transportHTTPPackage.Ident("SupportPackageIsVersion1"))
 	g.P()
 

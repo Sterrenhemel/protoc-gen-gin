@@ -26,24 +26,24 @@ type Response struct {
 	Data interface{} ` + "`json:\"data,omitempty\"`" + `
 }
 
-func (Unimplemented{{.ServiceType}}HTTPServer) Err(ctx *gin.Context, err error) {
+func (Unimplemented{{.ServiceType}}HTTPServer) Err(c *gin.Context, err error) {
 	res := &Response{}
 	if errx, ok := err.(errorx.Errorx); ok {
 		res.Code = errx.Code()
-		res.Message = errx.Error()
+	} else {
+		res.Code = -1
 	}
-	res.Code = -1
 	res.Message = err.Error()
-	ctx.JSON(200, res)
+	c.JSON(200, res)
 }
 
-func (Unimplemented{{.ServiceType}}HTTPServer) Data(ctx *gin.Context, data interface{}) {
+func (Unimplemented{{.ServiceType}}HTTPServer) Data(c *gin.Context, data interface{}) {
 	res := &Response{
 		Code: 200,
 		Message: "ok",
 		Data: data,
 	}
-	ctx.JSON(200, res)
+	c.JSON(200, res)
 }
 {{- range .MethodSets}}
 	func (Unimplemented{{$svrType}}HTTPServer) {{.Name}}(*gin.Context, *{{.Request}}) (*{{.Reply}}, error) {return nil, errors.New("method not implemented")}
@@ -53,25 +53,38 @@ func Register{{.ServiceType}}HTTPServer(s *http.Server, router *gin.Engine, srv 
 	{{- range .Methods}}
 	router.{{.Method}}("{{.Path}}", _{{$svrType}}_{{.Name}}{{.Num}}_HTTP_Handler(srv))
 	{{- end}}
+	// redirect with splash
+	{{- range .Methods}}
+	{{- if not (endWithSplash .Path)}}
+	router.{{.Method}}("{{.Path}}/", _{{$svrType}}_{{.Name}}{{.Num}}_HTTP_Handler(srv))
+	{{- end }}
+	{{- end}}
 	s.HandlePrefix("/", router)
 }
 
 {{range .Methods}}
-func _{{$svrType}}_{{.Name}}{{.Num}}_HTTP_Handler(srv {{$svrType}}HTTPServer) func(ctx *gin.Context) {
-	return func(ctx *gin.Context) {
+func _{{$svrType}}_{{.Name}}{{.Num}}_HTTP_Handler(srv {{$svrType}}HTTPServer) func(c *gin.Context) {
+	return func(c *gin.Context) {
 		var in {{.Request}}
-		if err := ctx.Bind(&in); err != nil {
-			srv.Err(ctx, err)
-			return
+		b := binding1.Default(c.Request.Method, c.ContentType())
+		if b.Name() == "json" {
+			if err := c.ShouldBindBodyWith(&in, binding1.JSON); err != nil {
+				srv.Err(c, err)
+				return
+			}
+		} else {
+			if err := c.ShouldBindWith(&in, b); err != nil {
+				srv.Err(c, err)
+				return
+			}
 		}
-		http.SetOperation(ctx,"/{{$svrName}}/{{.Name}}")
 
-		reply, err := srv.{{.Name}}(ctx, &in)
+		reply, err := srv.{{.Name}}(c, &in)
 		if err != nil {
-			srv.Err(ctx, err)
+			srv.Err(c, err)
 			return
 		}
-		srv.Data(ctx, reply)
+		srv.Data(c, reply)
 	}
 }
 {{end}}
@@ -140,7 +153,11 @@ func (s *serviceDesc) execute() string {
 		s.MethodSets[m.Name] = m
 	}
 	buf := new(bytes.Buffer)
-	tmpl, err := template.New("http").Parse(strings.TrimSpace(httpTemplate))
+	tmpl, err := template.New("http").Funcs(
+		map[string]interface{}{
+			"endWithSplash": EndWithSlash,
+		},
+	).Parse(strings.TrimSpace(httpTemplate))
 	if err != nil {
 		panic(err)
 	}
@@ -148,4 +165,11 @@ func (s *serviceDesc) execute() string {
 		panic(err)
 	}
 	return strings.Trim(buf.String(), "\r\n")
+}
+
+func EndWithSlash(s string) bool {
+	if strings.HasSuffix(s, "/") {
+		return true
+	}
+	return false
 }
