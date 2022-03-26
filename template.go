@@ -39,7 +39,7 @@ func (Unimplemented{{.ServiceType}}HTTPServer) Err(c *gin.Context, err error) {
 
 func (Unimplemented{{.ServiceType}}HTTPServer) Data(c *gin.Context, data interface{}) {
 	res := &Response{
-		Code: 200,
+		Code: 0,
 		Message: "ok",
 		Data: data,
 	}
